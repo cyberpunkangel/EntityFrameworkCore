@@ -2,6 +2,7 @@ using EFCorePeliculas;
 using EFCorePeliculas.CompiledModels;
 using EFCorePeliculas.Servicios;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,7 +13,14 @@ builder.Services.AddControllers().AddJsonOptions(opciones =>
   opciones.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Películas API", Version = "v1" });
+    // opcional: para que la UI sugiera la base correcta
+    c.AddServer(new OpenApiServer {
+      Url = "https://cyberpunkangel.onthewifi.com/efcorepeliculas"
+    });
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(opciones =>
@@ -50,7 +58,13 @@ var app = builder.Build();
 
 app.UseSwagger();
 
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    // La spec en /swagger/v1/swagger.json
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Películas API V1");
+    // Y la UI en /swagger/index.html
+    c.RoutePrefix = "swagger";
+});
 
 app.UseHttpsRedirection();
 
